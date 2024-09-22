@@ -18,11 +18,31 @@ tcpdump -ntr file.pcap
 tcpdump -ntr file.pcap -e -c 10
 ```
 
-_Hex Output_
+_Hex & Verbose Output_
 ```bash
-
+# -x print the data of each packet in hex
+# -xx also prints link-layer header
+tcpdump -ntr file.pcap -s
 ```
 
+```bash
+# -X print in hex AND ASCII
+# -XX also prints link-layer leader
+tcpdump -ntr file.pcap -X
+```
+
+```bash
+# -v print verbose including TTL, ID, total length, IP options
+# -vv includes additional app-layer fields, -vvv even more verbose
+tcpdump -ntr file.pcap -v
+```
+
+_BPF_
+```bash
+# The BPF is placed in quotes after other arguments
+# E.g. TCP SYN&ACK set:
+tcpdump -ntr file.pcap 'tcp[13]&0x12 = 0x12'
+```
 
 ## snort
 _Run config file over a pcap, and display alerts_
