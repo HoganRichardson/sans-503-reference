@@ -47,6 +47,7 @@ tcpdump -ntr file.pcap 'tcp[13]&0x12 = 0x12'
 ## snort
 _Run config file over a pcap, and display alerts_
 ```bash
+# Logs will output to current dir, unless -l ./logdir is specified
 snort -c ./config_file.lua -r ./mypcap.pcap -A alert_full
 ```
 
@@ -59,7 +60,7 @@ zeek -r ./mypcap.pcap
 ```
 _signatures identify particular events and flag them (**publish**)_
 * A zeek script can define a script that that **subscribes** to an event triggered by a signature match 
-```
+```bash
 # Pass signature file with -s
 zeek -r ./mypcap.pcap -s my-sig.sig
 ```
