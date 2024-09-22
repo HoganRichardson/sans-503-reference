@@ -5,6 +5,7 @@ categories: Commandline
 ---
 
 ## tcpdump
+> Capturing, viewing and filtering PCAPs
 _Read file with various fields_ 
 ```bash
 # Basic usage
@@ -13,10 +14,14 @@ _Read file with various fields_
 # -t do NOT print timestamps
 tcpdump -ntr file.pcap
 
-# -e Show MAC Addresses
+# -e Show MAC Addresses/Link Layer details
 # -c print x number of packets
 tcpdump -ntr file.pcap -e -c 10
 ```
+
+_Alt Timestamps_
+* `-tt` print UNIX epoch time
+* `-ttt` print delta-time between each line
 
 _Hex & Verbose Output_
 ```bash
@@ -45,6 +50,8 @@ tcpdump -ntr file.pcap 'tcp[13]&0x12 = 0x12'
 ```
 
 ## snort
+> Writing and executing alerting on traffic
+
 _Run config file over a pcap, and display alerts_
 ```bash
 # Logs will output to current dir, unless -l ./logdir is specified
@@ -52,6 +59,15 @@ snort -c ./config_file.lua -r ./mypcap.pcap -A alert_full
 ```
 
 ## zeek
+> Distributed, event-based signaturing and analysing of traffic 
+
+> formerly known as _Bro_
+
+_test a zeek script_
+```bash
+zeek script.zeek
+```
+
 _injest logs from pcap_
 ```bash
 # This will create the various .log files in the current directory
@@ -80,6 +96,8 @@ cat *.log | zeek-cut -u ts fuid id.orig_h id.orig_p id.resp_h id.resp_p sig_id e
 ```
 
 ## SiLK
+> Netflow analysis
+
 _Convert PCAP to SiLK Format_
 ```bash
 rwp2yaf2silk --in=file.pcap --out=file.silk
@@ -90,11 +108,29 @@ _Manipulate Netflow data from the SiLK Database that's running_
 ```bash
 rwfilter --type=all --proto=0- --start-date=yyyy/mm/dd --end-date=yyyy/mm/dd --pass=stdout | # pipe to another rw command
 ```
+* Chain muiltiple `rwfilter` commands to do more complex filtering
+* `--flags-all` to specify TCP flags
 * `--flags-initial` to search flags recorded by the first packet in a flow. `--flags-initial=S/SA` is the same as `tcp[13]&0x12=0x02` (i.e. SYN flag only)
+* `--print-stat` prints flow statistics including filter pass/fail count
+* Filter by various flow properties:
+    * `--proto` (e.g. =6 for TCP, 0- for all, or specify range)
+    * `--sport`, `--dport`, `--aport` (either port)
+    * `--saddress`, `--daddress`
+        * `--any-address=1.2.3.4` match source or destination IP
+    * `--scidr`, `--dcidr`, `--anycidr`
 
-* Pipe to another rw command such as:
+* Pipe to another rw command such as _(generally use `--fields` with these)_:
     * `rwstats` groups into bins by the specified fields, and produces stats
-        * `count=0` prints all bins
-    * `rwcount` 
-    * `rwuniq`
-    * `rwcut` Display tabluated output of specified fields
+        * `--count=0` prints all bins
+        * `--bytes` count by bytes
+    * `rwcut` Display tabluated output of specified fieldsA
+    * `rwcount` Summarise records across time, sum(bytes,packets,records)
+    * `rwuniq` group/count by a specified column
+    * `rwcombine` to combine all flows into single statistic (e.g. summing total bytes across multiple flows)
+
+```bash
+# Get tabulated netflow data
+rwfilter ... | rwcut --fields sip,sport,dip,dport,flags,packets,protocol,dura
+# Which source sends the greatest number of bytes
+rwfilter ... | rwstats --fields 
+```
